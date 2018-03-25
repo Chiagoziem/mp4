@@ -1,1 +1,1 @@
-MP4
+This is an example of duplicated code. This illustrates duplicated expressions in the same class. One way to refactor would be to eliminate one of the methods as they do exactly the same thingand make another function that is passed parameters.  The program tries to add the plugin to the map twice. By creating an additional method that is passed parameters, the same code canexecute two different processes but have two different results.

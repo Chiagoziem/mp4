@@ -61,7 +61,7 @@ import java.util.logging.Logger;
  * @since 1.607
  */
 @Restricted(NoExternalUse.class) // for now, we may make it public later
-public class Nodes implements Saveable {
+  public class Nodes implements Saveable {
 
     /**
      * The {@link Jenkins} instance that we are tracking nodes for.
@@ -82,7 +82,7 @@ public class Nodes implements Saveable {
      *                reference the {@link Jenkins} instance has not completed instantiation.
      */
     /*package*/ Nodes(@Nonnull Jenkins jenkins) {
-        this.jenkins = jenkins;
+      this.jenkins = jenkins;
     }
 
     /**
@@ -92,7 +92,7 @@ public class Nodes implements Saveable {
      */
     @Nonnull
     public List<Node> getNodes() {
-        return new ArrayList<Node>(nodes.values());
+      return new ArrayList<Node>(nodes.values());
     }
 
     /**
@@ -102,21 +102,22 @@ public class Nodes implements Saveable {
      * @throws IOException if the new list of nodes could not be persisted.
      */
     public void setNodes(final @Nonnull Collection<? extends Node> nodes) throws IOException {
-        Queue.withLock(new Runnable() {
-            @Override
-            public void run() {
-                Set<String> toRemove = new HashSet<String>(Nodes.this.nodes.keySet());
-                for (Node n : nodes) {
-                    final String name = n.getNodeName();
-                    toRemove.remove(name);
-                    Nodes.this.nodes.put(name, n);
-                }
-                Nodes.this.nodes.keySet().removeAll(toRemove); // directory clean up will be handled by save
-                jenkins.updateComputerList();
-                jenkins.trimLabels();
-            }
-        });
-        save();
+      Queue.withLock(new Runnable() {
+        @Override
+        public void run() {
+          Set<String> toRemove = new HashSet<String>(Nodes.this.nodes.keySet());
+          for (Node n : nodes) {
+            final String name = n.getNodeName();
+            toRemove.remove(name);
+            Nodes.this.nodes.put(name, n);
+          }
+          Nodes.this.nodes.keySet().removeAll(toRemove); // directory clean up will be handled by save
+
+          updateAndTrim();
+
+        }
+      });
+      save();
     }
 
     /**
@@ -126,26 +127,26 @@ public class Nodes implements Saveable {
      * @throws IOException if the list of nodes could not be persisted.
      */
     public void addNode(final @Nonnull Node node) throws IOException {
-        if (node != nodes.get(node.getNodeName())) {
-            // TODO we should not need to lock the queue for adding nodes but until we have a way to update the
-            // computer list for just the new node
-            Queue.withLock(new Runnable() {
-                @Override
-                public void run() {
-                    nodes.put(node.getNodeName(), node);
-                    jenkins.updateComputerList();
-                    jenkins.trimLabels();
-                }
-            });
-            // no need for a full save() so we just do the minimum
-            if (node instanceof EphemeralNode) {
-                Util.deleteRecursive(new File(getNodesDir(), node.getNodeName()));
-            } else {
-                XmlFile xmlFile = new XmlFile(Jenkins.XSTREAM,
-                        new File(new File(getNodesDir(), node.getNodeName()), "config.xml"));
-                xmlFile.write(node);
-            }
+      if (node != nodes.get(node.getNodeName())) {
+        // TODO we should not need to lock the queue for adding nodes but until we have a way to update the
+        // computer list for just the new node
+        Queue.withLock(new Runnable() {
+          @Override
+          public void run() {
+            nodes.put(node.getNodeName(), node);
+
+            updateAndTrim();
+          }
+        });
+        // no need for a full save() so we just do the minimum
+        if (node instanceof EphemeralNode) {
+          Util.deleteRecursive(new File(getNodesDir(), node.getNodeName()));
+        } else {
+          XmlFile xmlFile = new XmlFile(Jenkins.XSTREAM,
+              new File(new File(getNodesDir(), node.getNodeName()), "config.xml"));
+          xmlFile.write(node);
         }
+      }
     }
 
     /**
@@ -156,24 +157,25 @@ public class Nodes implements Saveable {
      * @throws IOException if the list of nodes could not be persisted.
      */
     public void removeNode(final @Nonnull Node node) throws IOException {
-        if (node == nodes.get(node.getNodeName())) {
-            Queue.withLock(new Runnable() {
-                @Override
-                public void run() {
-                    Computer c = node.toComputer();
-                    if (c != null) {
-                        c.recordTermination();
-                        c.disconnect(OfflineCause.create(hudson.model.Messages._Hudson_NodeBeingRemoved()));
-                    }
-                    if (node == nodes.remove(node.getNodeName())) {
-                        jenkins.updateComputerList();
-                        jenkins.trimLabels();
-                    }
-                }
-            });
-            // no need for a full save() so we just do the minimum
-            Util.deleteRecursive(new File(getNodesDir(), node.getNodeName()));
-        }
+      if (node == nodes.get(node.getNodeName())) {
+        Queue.withLock(new Runnable() {
+          @Override
+          public void run() {
+            Computer c = node.toComputer();
+            if (c != null) {
+              c.recordTermination();
+              c.disconnect(OfflineCause.create(hudson.model.Messages._Hudson_NodeBeingRemoved()));
+            }
+            if (node == nodes.remove(node.getNodeName())) {
+
+              updateAndTrim();
+
+            }
+          }
+        });
+        // no need for a full save() so we just do the minimum
+        Util.deleteRecursive(new File(getNodesDir(), node.getNodeName()));
+      }
     }
 
     /**
@@ -181,28 +183,28 @@ public class Nodes implements Saveable {
      */
     @Override
     public void save() throws IOException {
-        if (BulkChange.contains(this)) {
-            return;
+      if (BulkChange.contains(this)) {
+        return;
+      }
+      final File nodesDir = getNodesDir();
+      final Set<String> existing = new HashSet<String>();
+      for (Node n : nodes.values()) {
+        if (n instanceof EphemeralNode) {
+          continue;
         }
-        final File nodesDir = getNodesDir();
-        final Set<String> existing = new HashSet<String>();
-        for (Node n : nodes.values()) {
-            if (n instanceof EphemeralNode) {
-                continue;
-            }
-            existing.add(n.getNodeName());
-            XmlFile xmlFile = new XmlFile(Jenkins.XSTREAM, new File(new File(nodesDir, n.getNodeName()), "config.xml"));
-            xmlFile.write(n);
-            SaveableListener.fireOnChange(this, xmlFile);
+        existing.add(n.getNodeName());
+        XmlFile xmlFile = new XmlFile(Jenkins.XSTREAM, new File(new File(nodesDir, n.getNodeName()), "config.xml"));
+        xmlFile.write(n);
+        SaveableListener.fireOnChange(this, xmlFile);
+      }
+      for (File forDeletion : nodesDir.listFiles(new FileFilter() {
+        @Override
+        public boolean accept(File pathname) {
+          return pathname.isDirectory() && !existing.contains(pathname.getName());
         }
-        for (File forDeletion : nodesDir.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File pathname) {
-                return pathname.isDirectory() && !existing.contains(pathname.getName());
-            }
-        })) {
-            Util.deleteRecursive(forDeletion);
-        }
+      })) {
+        Util.deleteRecursive(forDeletion);
+      }
     }
 
     /**
@@ -213,7 +215,7 @@ public class Nodes implements Saveable {
      */
     @CheckForNull
     public Node getNode(String name) {
-        return name == null ? null : nodes.get(name);
+      return name == null ? null : nodes.get(name);
     }
 
     /**
@@ -222,39 +224,39 @@ public class Nodes implements Saveable {
      * @throws IOException if the nodes could not be deserialized.
      */
     public void load() throws IOException {
-        final File nodesDir = getNodesDir();
-        final File[] subdirs = nodesDir.listFiles(new FileFilter() {
-            public boolean accept(File child) {
-                return child.isDirectory();
-            }
-        });
-        final Map<String, Node> newNodes = new TreeMap<String, Node>();
-        if (subdirs != null) {
-            for (File subdir : subdirs) {
-                try {
-                    XmlFile xmlFile = new XmlFile(Jenkins.XSTREAM, new File(subdir, "config.xml"));
-                    if (xmlFile.exists()) {
-                        Node node = (Node) xmlFile.read();
-                        newNodes.put(node.getNodeName(), node);
-                    }
-                } catch (IOException e) {
-                    Logger.getLogger(ItemGroupMixIn.class.getName()).log(Level.WARNING, "could not load " + subdir, e);
-                }
-            }
+      final File nodesDir = getNodesDir();
+      final File[] subdirs = nodesDir.listFiles(new FileFilter() {
+        public boolean accept(File child) {
+          return child.isDirectory();
         }
-        Queue.withLock(new Runnable() {
-            @Override
-            public void run() {
-                for (Iterator<Map.Entry<String, Node>> i = nodes.entrySet().iterator(); i.hasNext(); ) {
-                    if (!(i.next().getValue() instanceof EphemeralNode)) {
-                        i.remove();
-                    }
-                }
-                nodes.putAll(newNodes);
-                jenkins.updateComputerList();
-                jenkins.trimLabels();
+      });
+      final Map<String, Node> newNodes = new TreeMap<String, Node>();
+      if (subdirs != null) {
+        for (File subdir : subdirs) {
+          try {
+            XmlFile xmlFile = new XmlFile(Jenkins.XSTREAM, new File(subdir, "config.xml"));
+            if (xmlFile.exists()) {
+              Node node = (Node) xmlFile.read();
+              newNodes.put(node.getNodeName(), node);
             }
-        });
+          } catch (IOException e) {
+            Logger.getLogger(ItemGroupMixIn.class.getName()).log(Level.WARNING, "could not load " + subdir, e);
+          }
+        }
+      }
+      Queue.withLock(new Runnable() {
+        @Override
+        public void run() {
+          for (Iterator<Map.Entry<String, Node>> i = nodes.entrySet().iterator(); i.hasNext(); ) {
+            if (!(i.next().getValue() instanceof EphemeralNode)) {
+              i.remove();
+            }
+          }
+          nodes.putAll(newNodes);
+          updateAndTrim();
+
+        }
+      });
     }
 
     /**
@@ -264,11 +266,11 @@ public class Nodes implements Saveable {
      * @throws IOException
      */
     private File getNodesDir() throws IOException {
-        final File nodesDir = new File(jenkins.getRootDir(), "nodes");
-        if (!nodesDir.isDirectory() && !nodesDir.mkdirs()) {
-            throw new IOException(String.format("Could not mkdirs %s", nodesDir));
-        }
-        return nodesDir;
+      final File nodesDir = new File(jenkins.getRootDir(), "nodes");
+      if (!nodesDir.isDirectory() && !nodesDir.mkdirs()) {
+        throw new IOException(String.format("Could not mkdirs %s", nodesDir));
+      }
+      return nodesDir;
     }
 
     /**
@@ -277,6 +279,12 @@ public class Nodes implements Saveable {
      * @return {@code true} if and only if the list of nodes is stored in the legacy location.
      */
     public boolean isLegacy() {
-        return !new File(jenkins.getRootDir(), "nodes").isDirectory();
+      return !new File(jenkins.getRootDir(), "nodes").isDirectory();
     }
-}
+
+    private void updateAndTrim(){
+      jenkins.updateComputerList();
+      jenkins.trimLabels();
+    }
+
+  }

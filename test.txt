@@ -1,2 +1,5 @@
 This is a test to see if auto-build functionality works.
 test
+test
+test
+test

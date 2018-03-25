@@ -61,7 +61,7 @@ import java.util.logging.Logger;
  * @since 1.607
  */
 @Restricted(NoExternalUse.class) // for now, we may make it public later
-  public class Nodes implements Saveable {
+  public class Nodes implements Saveable, Jenkins {
 
     /**
      * The {@link Jenkins} instance that we are tracking nodes for.
@@ -280,5 +280,10 @@ import java.util.logging.Logger;
      */
     public boolean isLegacy() {
       return !new File(jenkins.getRootDir(), "nodes").isDirectory();
+    }
+
+    public void updateAndTrim(){
+      jenkins.updateComputerList();
+      jenkins.trimLabels();
     }
   }

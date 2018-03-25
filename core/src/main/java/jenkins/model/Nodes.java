@@ -54,7 +54,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.models.Jenkins;
 
 /**
  * Manages all the nodes for Jenkins.
@@ -114,7 +113,7 @@ import java.models.Jenkins;
           }
           Nodes.this.nodes.keySet().removeAll(toRemove); // directory clean up will be handled by save
 
-          Jenkins.updateAndTrim();
+          this.updateAndTrim();
 
         }
       });
@@ -136,7 +135,7 @@ import java.models.Jenkins;
           public void run() {
             nodes.put(node.getNodeName(), node);
 
-            Jenkins.updateAndTrim();
+            this.updateAndTrim();
           }
         });
         // no need for a full save() so we just do the minimum
@@ -169,7 +168,7 @@ import java.models.Jenkins;
             }
             if (node == nodes.remove(node.getNodeName())) {
 
-              Jenkins.updateAndTrim();
+              this.updateAndTrim();
 
             }
           }
@@ -254,7 +253,7 @@ import java.models.Jenkins;
             }
           }
           nodes.putAll(newNodes);
-          Jenkins.updateAndTrim();
+          this.updateAndTrim();
 
         }
       });

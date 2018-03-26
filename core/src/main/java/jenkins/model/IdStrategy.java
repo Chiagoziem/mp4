@@ -246,7 +246,7 @@ public abstract class IdStrategy extends AbstractDescribableImpl<IdStrategy> imp
                    }
                  } else if (c == '$') {
                    StringBuilder hex = new StringBuilder(4);
-                   loop(hex, i); 
+                   loopReplace(hex, i); //replaced if statements
 
                    buf.append(Character.valueOf((char)Integer.parseInt(hex.toString(), 16)));
                  }
@@ -254,115 +254,115 @@ public abstract class IdStrategy extends AbstractDescribableImpl<IdStrategy> imp
                }
                return buf.toString();
              }
-            
-             @Override
-             private void loop(StringBuilder hex, int i){
-               for(int j = 0; j < 4; j++) {
-                 i++;
-                 if(i < chars.length) {
-                   hex.append(chars[i]);
-                 } else {
-                   break;
-                 }
-               }           
-             }
+           }
 
-             /**
-              * {@inheritDoc}
-              */
-             @Override
-             public boolean equals(@Nonnull String id1, @Nonnull String id2) {
-               return StringUtils.equals(id1, id2);
-             }
-
-             /**
-              * {@inheritDoc}
-              */
-             @Nonnull
-             public String keyFor(@Nonnull String id) {
-               return id;
-             }
-
-             /**
-              * {@inheritDoc}
-              */
-             @Override
-             public int compare(@Nonnull String id1, @Nonnull String id2) {
-               return id1.compareTo(id2);
-             }
-
-             @Extension
-             public static class DescriptorImpl extends IdStrategyDescriptor {
-
-               /**
-                * {@inheritDoc}
-                */
-               @Override
-               public String getDisplayName() {
-                 return Messages.IdStrategy_CaseSensitive_DisplayName();
+           public void loopReplace(StringBuilder hex, int i){
+             for(int j = 0; j < 4; j++) {
+               i++;
+               if(i < chars.length) {
+                 hex.append(chars[i]);
+               } else {
+                 break;
                }
-             }
+             }           
            }
 
            /**
-            * A case sensitive email address {@link IdStrategy}. Providing this implementation among the set of default
-            * implementations as given the history of misunderstanding in the Jenkins code base around ID case sensitivity,
-            * if not provided people will get this wrong.
-            * <p/>
-            * Note: Not all email addresses are case sensitive. It is knowledge that belongs to the server that holds the
-            * mailbox. Most sane system administrators do not configure their accounts using case sensitive mailboxes
-            * but the RFC does allow them the option to configure that way. Domain names are always case insensitive per RFC.
+            * {@inheritDoc}
             */
-           public static class CaseSensitiveEmailAddress extends CaseSensitive {
+           @Override
+           public boolean equals(@Nonnull String id1, @Nonnull String id2) {
+             return StringUtils.equals(id1, id2);
+           }
 
-             @DataBoundConstructor
-             public CaseSensitiveEmailAddress() {}
+           /**
+            * {@inheritDoc}
+            */
+           @Nonnull
+           public String keyFor(@Nonnull String id) {
+             return id;
+           }
 
-             /**
-              * {@inheritDoc}
-              */
-             @Override
-             @Nonnull
-             public String filenameOf(@Nonnull String id) {
-               return super.filenameOf(keyFor(id));
-             }
+           /**
+            * {@inheritDoc}
+            */
+           @Override
+           public int compare(@Nonnull String id1, @Nonnull String id2) {
+             return id1.compareTo(id2);
+           }
 
-             /**
-              * {@inheritDoc}
-              */
-             @Override
-             public boolean equals(@Nonnull String id1, @Nonnull String id2) {
-               return StringUtils.equals(keyFor(id1), keyFor(id2));
-             }
-
-             /**
-              * {@inheritDoc}
-              */
-             @Nonnull
-             public String keyFor(@Nonnull String id) {
-               int index = id.lastIndexOf('@'); // The @ can be used in local-part if quoted correctly
-               // => the last @ is the one used to separate the domain and local-part
-               return index == -1 ? id : id.substring(0, index) + (id.substring(index).toLowerCase(Locale.ENGLISH));
-             }
+           @Extension
+           public static class DescriptorImpl extends IdStrategyDescriptor {
 
              /**
               * {@inheritDoc}
               */
              @Override
-             public int compare(@Nonnull String id1, @Nonnull String id2) {
-               return keyFor(id1).compareTo(keyFor(id2));
-             }
-
-             @Extension
-             public static class DescriptorImpl extends IdStrategyDescriptor {
-
-               /**
-                * {@inheritDoc}
-                */
-               @Override
-               public String getDisplayName() {
-                 return Messages.IdStrategy_CaseSensitiveEmailAddress_DisplayName();
-               }
+             public String getDisplayName() {
+               return Messages.IdStrategy_CaseSensitive_DisplayName();
              }
            }
          }
+
+         /**
+          * A case sensitive email address {@link IdStrategy}. Providing this implementation among the set of default
+          * implementations as given the history of misunderstanding in the Jenkins code base around ID case sensitivity,
+          * if not provided people will get this wrong.
+          * <p/>
+          * Note: Not all email addresses are case sensitive. It is knowledge that belongs to the server that holds the
+          * mailbox. Most sane system administrators do not configure their accounts using case sensitive mailboxes
+          * but the RFC does allow them the option to configure that way. Domain names are always case insensitive per RFC.
+          */
+         public static class CaseSensitiveEmailAddress extends CaseSensitive {
+
+           @DataBoundConstructor
+           public CaseSensitiveEmailAddress() {}
+
+           /**
+            * {@inheritDoc}
+            */
+           @Override
+           @Nonnull
+           public String filenameOf(@Nonnull String id) {
+             return super.filenameOf(keyFor(id));
+           }
+
+           /**
+            * {@inheritDoc}
+            */
+           @Override
+           public boolean equals(@Nonnull String id1, @Nonnull String id2) {
+             return StringUtils.equals(keyFor(id1), keyFor(id2));
+           }
+
+           /**
+            * {@inheritDoc}
+            */
+           @Nonnull
+           public String keyFor(@Nonnull String id) {
+             int index = id.lastIndexOf('@'); // The @ can be used in local-part if quoted correctly
+             // => the last @ is the one used to separate the domain and local-part
+             return index == -1 ? id : id.substring(0, index) + (id.substring(index).toLowerCase(Locale.ENGLISH));
+           }
+
+           /**
+            * {@inheritDoc}
+            */
+           @Override
+           public int compare(@Nonnull String id1, @Nonnull String id2) {
+             return keyFor(id1).compareTo(keyFor(id2));
+           }
+
+           @Extension
+           public static class DescriptorImpl extends IdStrategyDescriptor {
+
+             /**
+              * {@inheritDoc}
+              */
+             @Override
+             public String getDisplayName() {
+               return Messages.IdStrategy_CaseSensitiveEmailAddress_DisplayName();
+             }
+           }
+         }
+}

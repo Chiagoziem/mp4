@@ -113,7 +113,7 @@ import java.util.logging.Logger;
           }
           Nodes.this.nodes.keySet().removeAll(toRemove); // directory clean up will be handled by save
 
-          updateAndTrim();
+          jenkins.updateAndTrim();
 
         }
       });
@@ -135,7 +135,7 @@ import java.util.logging.Logger;
           public void run() {
             nodes.put(node.getNodeName(), node);
 
-            updateAndTrim();
+            jenkins.updateAndTrim();
           }
         });
         // no need for a full save() so we just do the minimum
@@ -168,7 +168,7 @@ import java.util.logging.Logger;
             }
             if (node == nodes.remove(node.getNodeName())) {
 
-              updateAndTrim();
+              jenkins.updateAndTrim();
 
             }
           }
@@ -253,7 +253,7 @@ import java.util.logging.Logger;
             }
           }
           nodes.putAll(newNodes);
-          updateAndTrim();
+          jenkins.updateAndTrim();
 
         }
       });
@@ -280,10 +280,5 @@ import java.util.logging.Logger;
      */
     public boolean isLegacy() {
       return !new File(jenkins.getRootDir(), "nodes").isDirectory();
-    }
-
-    private void updateAndTrim(){
-      jenkins.updateComputerList();
-      jenkins.trimLabels();
     }
   }

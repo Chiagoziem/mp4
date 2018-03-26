@@ -246,7 +246,7 @@ public abstract class IdStrategy extends AbstractDescribableImpl<IdStrategy> imp
                    }
                  } else if (c == '$') {
                    StringBuilder hex = new StringBuilder(4);
-                   loopReplace(hex, i); //replaced if statements
+                   loopReplace(hex, i, chars); //replaced if statements
 
                    buf.append(Character.valueOf((char)Integer.parseInt(hex.toString(), 16)));
                  }
@@ -256,7 +256,7 @@ public abstract class IdStrategy extends AbstractDescribableImpl<IdStrategy> imp
              }
            }
 
-           public void loopReplace(StringBuilder hex, int i){
+           public void loopReplace(StringBuilder hex, int i, final char[] chars){
              for(int j = 0; j < 4; j++) {
                i++;
                if(i < chars.length) {

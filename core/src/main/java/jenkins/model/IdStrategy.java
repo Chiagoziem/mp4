@@ -247,18 +247,16 @@ public abstract class IdStrategy extends AbstractDescribableImpl<IdStrategy> imp
                  } else if (c == '$') {
                    StringBuilder hex = new StringBuilder(4);
                    for(int j = 0; j < 4; j++) {
-                     this.looper(hex, i); //this.looper refers to idFromFilename.looper
+                     i++;
+                     if(i < chars.length) {
+                       hex.append(chars[i]);
+                     } else {
+                       break;
+                     }
+
                    }
 
                    buf.append(Character.valueOf((char)Integer.parseInt(hex.toString(), 16)));
-                 }
-                 StringBuilder looper(Stringbuilder hex, int i){
-                   i++;
-                   if(i < chars.length) {
-                     hex.append(chars[i]);
-                   } else {
-                     break;
-                   }
                  }
 
                }

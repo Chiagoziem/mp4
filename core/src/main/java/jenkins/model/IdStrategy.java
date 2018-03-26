@@ -254,7 +254,8 @@ public abstract class IdStrategy extends AbstractDescribableImpl<IdStrategy> imp
                }
                return buf.toString();
              }
-
+            
+             @Override
              private void loop(StringBuilder hex, int i){
                for(int j = 0; j < 4; j++) {
                  i++;

@@ -123,11 +123,6 @@ public class CronTabTest {
     @Test
     public void testCeil5() throws ANTLRException {
         calenderFix(); 
-        final CronTab cron = new CronTab(cronStr);
-        final Calendar next = cron.ceil(cal);
-
-        final Calendar expectedDate = Calendar.getInstance();
-        expectedDate.set(2011, 0, 17, 23, 0, 0); // Expected next: Monday, Jan 17th 2011, 23:00
     }
 
     @Test

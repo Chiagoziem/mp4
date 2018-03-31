@@ -182,7 +182,8 @@ public class Connection {
 		KeyPair keyPair;
 		KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance("DH");
 		DHParameterSpec params = ((DHPublicKey) otherHalf).getParams();
-		keyPairGen.initialize(params);
+		DHParameterSpec params2 = params;
+		keyPairGen.initialize(params2);
 		keyPair = keyPairGen.generateKeyPair();
 		return keyPair;
 	}
@@ -193,7 +194,8 @@ public class Connection {
 		KeyPair keyPair;
 		KeyPairGenerator dh = KeyPairGenerator.getInstance("DH");
 		DHParameterSpec parameterSpec = paramGen.generateParameters().getParameterSpec(DHParameterSpec.class);
-		dh.initialize(parameterSpec);
+		DHParameterSpec parameterSpec2 = parameterSpec;
+		dh.initialize(parameterSpec2);
 		keyPair = dh.generateKeyPair();
 		return keyPair;
 	}
